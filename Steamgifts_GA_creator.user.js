@@ -5,7 +5,7 @@
 // @description Creates a table of all giveaways you've created with links to the Steam product page and the GA page. RaChart compatible.
 // @version 0.2
 // @icon http://i.imgur.com/XYzKXzK.png
-// @downloadURL xxx
+// @downloadURL https://github.com/Laurvin/SteamGifts-GA-Table-Creator/raw/master/Steamgifts_GA_creator.user.js
 // @include https://www.steamgifts.com/giveaways/created*
 // @grant GM_xmlhttpRequest
 // @require http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js

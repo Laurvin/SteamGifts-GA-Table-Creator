@@ -3,7 +3,7 @@
 // @namespace SteamGifts GA Table Creator
 // @author Laurvin
 // @description Creates a table of all giveaways you've created with links to the Steam product page and the GA page. RaChart compatible.
-// @version 0.5
+// @version 0.6
 // @icon http://i.imgur.com/XYzKXzK.png
 // @downloadURL https://github.com/Laurvin/SteamGifts-GA-Table-Creator/raw/master/SteamGifts_GA_Table_Creator.user.js
 // @include https://www.steamgifts.com/giveaways/created*
@@ -46,27 +46,32 @@ function TraverseGAs()
   SGTable.val(SGTable.val() + Headers + '\n');
   SGTable.val(SGTable.val() + Aligners + '\n');
 
-  $('.table__row-outer-wrap').each(function ()
+  $('.table__row-inner-wrap').each(function ()
   {
-    var GAlink = $(this).find('a.table__column__heading').attr('href');
-    var MinusName = GAlink.substring(0, GAlink.lastIndexOf('/')); // Removes game name from link.
-    var JustSlug = MinusName.substring(MinusName.lastIndexOf('/') + 1); // Saves just the slug.
-    var GameName = $(this).find('a.table__column__heading').text();
-    var NoImage = $(this).find('a.global__image-outer-wrap--missing-image').attr('href');
-    if (typeof NoImage !== 'undefined')
+    var GAlink = $(this).find('a.table_image_thumbnail').attr('href');
+    if (typeof GAlink === 'undefined') // Certain packs, etc. have no background image so we search on Steam.
     {
-      GetSteamInfo(GameName, JustSlug);
+      var GAlink = $(this).find('a.table_image_thumbnail_missing').attr('href');
+      var NoSteamLink = 1;
     }
-    else
+    var GAMinusName = GAlink.substring(0, GAlink.lastIndexOf('/')); // Removes game name from link.
+    var GAJustSlug = GAMinusName.substring(GAMinusName.lastIndexOf('/') + 1); // Saves just the slug.
+    var GameName = $(this).find('a.table__column__heading').text();
+    var NoImage = $(this).find('a.table_image_thumbnail_missing').attr('href');
+    if (NoSteamLink == 1)
     {
-      var ImgUrl = $(this).find('div.global__image-inner-wrap').css('background-image');
+      GetSteamInfo(GameName, GAJustSlug);
+    }
+    else 
+    {
+      var ImgUrl = $(this).find('a.table_image_thumbnail').css('background-image');
       var SubstrStart = ImgUrl.indexOf('akamaihd.net/steam/') + 18;
       var SubstrEnd = ImgUrl.lastIndexOf('/') + 1;
       var SteamUrlPart = ImgUrl.substring(SubstrStart, SubstrEnd);
       SteamUrlPart = SteamUrlPart.replace("apps", "app"); // No idea why the added the S in the urls for the images.
       SteamUrlPart = SteamUrlPart.replace("subs", "sub");
       var FullSteamLink = 'http://store.steampowered.com' + SteamUrlPart;
-      CreateTableRows(GameName, JustSlug, FullSteamLink);
+      CreateTableRows(GameName, GAJustSlug, FullSteamLink);
     }
   });
 }

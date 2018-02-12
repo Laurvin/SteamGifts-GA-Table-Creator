@@ -3,7 +3,7 @@
 // @namespace SteamGifts GA Table Creator
 // @author Laurvin
 // @description Creates a table of all giveaways you've created with links to the Steam product page and the GA page. RaChart compatible.
-// @version 1.1
+// @version 1.2
 // @icon http://i.imgur.com/XYzKXzK.png
 // @downloadURL https://github.com/Laurvin/SteamGifts-GA-Table-Creator/raw/master/SteamGifts_GA_Table_Creator.user.js
 // @include http://www.steamgifts.com/giveaways/created*
@@ -43,8 +43,8 @@ function addHTMLElements() // Adds a button and two text areas for the tables.
   $('.sidebar').append('<h3 class="sidebar__heading">SteamGifts GA Table Creator (<a style="color:#4B72D4;" target="_blank" href="https://www.steamgifts.com/discussion/dE8ro/">info</a>)</h3>');
   $('.sidebar').append('<button class="sidebar__action-button" id="AddCheckboxes" title="This will add checkboxes to all giveaways so you can select which giveaways are to show up on the tables to be created. If you do not add checkboxes then all giveaways on the page will be selected.">Add Checkboxes</button><div id="BoxingArena"></div>');
   $('#AddCheckboxes').click(AddCheckboxes); 
-  $('.sidebar').append('<p><br /><input id="GiveawayTitle" style="width:150px;" type="text" placeholder="Giveaway Title" title="Any text here will be displayed as the name of the link to the giveaways. If this is empty then we display the link. So if you enter the word Giveaway then all links will be called this in the column. This only works for the SG Table."></input>&nbsp;<input id="GiveawayLevel" style="width:50px; float:right;" type="text" placeholder="Level" title="Enter the level of the giveaways here, if needed. It will be automatically used on the thread tables. If you want to add it to the main GS Table then add a column called %LVL% to the Extra Columns field."></input></p>');
-  $('.sidebar').append('<p><br /><input id="ExtraColumns" type="text" placeholder="Extra Columns (|Col 1|Col 2)" title="You can add any extra columns you want using this but only for the SG and Excel Tables. Separate the columns with | like normal for SteamGifts formatting. Start with a | and do not add spaces around the | if you want to use it for the Excel Table. The columns names entered here will be repeated for every row in the table.&#013;&#013;There are three special options: if a column name is %ED% the rows for that column will be filled with the end date for the giveaway, %CN% will put your user name in the rows for that column, and %LVL% will show the level you entered into the Level field."></input><br /><br /></p>');
+  $('.sidebar').append('<p><br /><input id="GiveawayTitle" style="width:150px;" type="text" placeholder="Giveaway Title" title="Any text here will be displayed as the name of the link to the giveaways. If this is empty then we display the link. So if you enter the word Giveaway then all links will be called this in the column. This only works for the SG Table.&#013;&#013;This field now also supports the same variables as the Extra Columns field."></input>&nbsp;<input id="GiveawayLevel" style="width:50px; float:right;" type="text" placeholder="Level" title="Enter the level of the giveaways here, if needed. It will be automatically used on the thread tables. If you want to add it to the main GS Table then add a column called %LVL% to the Extra Columns field."></input></p>');
+  $('.sidebar').append('<p><br /><input id="ExtraColumns" type="text" placeholder="Extra Columns (|Col 1|Col 2)" title="You can add any extra columns you want using this but only for the SG and Excel Tables. Separate the columns with | like normal for SteamGifts formatting. Start with a | and do not add spaces around the | if you want to use it for the Excel Table. The columns names entered here will be repeated for every row in the table.&#013;&#013;There are three special variables: if a column name is %ED% the rows for that column will be filled with the end date for the giveaway, %CN% will put your user name in the rows for that column, and %LVL% will show the level you entered into the Level field."></input><br /><br /></p>');
   $('.sidebar').append('<p><input title="If checked giveaways that have ended won\'t be included in the tables." style="width:auto; cursor:pointer; vertical-align:middle;" id="SkipEnded" type="checkbox" name="SkipEnded" value="1" checked="checked"></input> <label title="If checked giveaways that have ended won\'t be included in the tables." style="cursor:pointer;" for="SkipEnded">&nbsp;Don\'t include ended Giveaways</label><br /><br /></p>');
   $('.sidebar').append('<button class="sidebar__action-button" id="CreateTables" title="When clicked this will create the tables for you, using any data supplied in the input boxes above and if checkboxes have been added then only for those checkboxes that have been selected.">Create Giveaways Tables</button>');
   $('#CreateTables').click(TraverseGAs);
@@ -103,11 +103,9 @@ function TraverseGAs()
   var CreatorName = $('.nav__avatar-outer-wrap').attr("href");
   CreatorName = CreatorName.substring(CreatorName.lastIndexOf('/') + 1);
   
-  // Adding Table headers to SG Table box.
+  // Adding Table headers to SG and Excel Table.
   var ExtraColumnInfo = $('#ExtraColumns').val();
-  ExtraColumnInfo = ExtraColumnInfo.replace('%ED%', 'End Date');
-  ExtraColumnInfo = ExtraColumnInfo.replace('%CN%', 'User');
-  ExtraColumnInfo = ExtraColumnInfo.replace('%LVL%', 'Level');
+  ExtraColumnInfo = ExtraColumnInfo.replace('%CN%', 'User').replace('%ED%', 'End Date').replace('%LVL%', 'Level');
 
   var Headers = 'Steam|Giveaway' + ExtraColumnInfo;
   var NumberOfAligners = (Headers.match(/\|/g) || []).length;
@@ -116,6 +114,8 @@ function TraverseGAs()
   var SGTable = $('#Table0');
   SGTable.val(SGTable.val() + Headers + '\n');
   SGTable.val(SGTable.val() + Aligners + '\n');
+  var ExcelTable = $('#Table1');
+  ExcelTable.val(ExcelTable.val() + Headers.replace(/\|/g, "\t") + '\n');
 
   $('.table__row-inner-wrap').each(function ()
   {
@@ -128,7 +128,7 @@ function TraverseGAs()
       if (SkipEnded == 0 || curtimestamp < Stampie) // Skip giveaways that have ended if checkbox for it was checked.
       {
         var dt = new Date(Stampie);
-        var EndDate = dt.getDate() + ' ' + month[dt.getMonth()];
+        var EndDate = month[dt.getMonth()] + ' ' + dt.getDate();
 
         var GAlink = $(this).find('a.table_image_thumbnail').attr('href');
         if (typeof GAlink === 'undefined') // Certain packs, etc. have no background image so we search on Steam for the store url.
@@ -136,9 +136,11 @@ function TraverseGAs()
           var GAlink = $(this).find('a.table_image_thumbnail_missing').attr('href');
           var NoSteamLink = 1;
         }
-        var GAMinusName = GAlink.substring(0, GAlink.lastIndexOf('/')); // Removes game name from link.
-        var GAJustSlug = GAMinusName.substring(GAMinusName.lastIndexOf('/') + 1); // Saves just the slug.
-        var GameName = $(this).find('a.table__column__heading').text();
+        var GALinkMinusName = GAlink.substring(0, GAlink.lastIndexOf('/')); // Removes game name from link.
+        var GAJustSlug = GALinkMinusName.substring(GALinkMinusName.lastIndexOf('/') + 1); // Saves just the slug.
+        var GameName = $(this).find('a.table__column__heading').html();
+        var IsThereASpan = GameName.indexOf('<span>'); // Removing extra info added by ESGST.
+        if (IsThereASpan > 0) GameName = GameName.substr(0,IsThereASpan-1).trim();
         if (NoSteamLink == 1)
         {
           GetSteamInfo(GameName, GAJustSlug, EndDate);
@@ -219,12 +221,11 @@ function GetSteamInfo(fnGameName, fnJustSlug, fnEndDate, fnCreatorName)
 }
 function CreateTableRows(fnGameName, fnJustSlug, fnSteamLink, fnEndDate, fnCreatorName)
 {
-  var GiveawayTitleInfo = $('#GiveawayTitle').val();
   var GiveawayLevel = $('#GiveawayLevel').val();
+  var GiveawayTitleInfo = $('#GiveawayTitle').val();
+  GiveawayTitleInfo = GiveawayTitleInfo.replace('%CN%', fnCreatorName).replace('%ED%', fnEndDate).replace('%LVL%', GiveawayLevel);
   var ExtraColumnInfo = $('#ExtraColumns').val();
-  ExtraColumnInfo = ExtraColumnInfo.replace('%ED%', fnEndDate);
-  ExtraColumnInfo = ExtraColumnInfo.replace('%LVL%', GiveawayLevel);
-  ExtraColumnInfo = ExtraColumnInfo.replace('%CN%', fnCreatorName);
+  ExtraColumnInfo = ExtraColumnInfo.replace('%CN%', fnCreatorName).replace('%ED%', fnEndDate).replace('%LVL%', GiveawayLevel);
   
   var ExtraColumnInfoExcel = ExtraColumnInfo.replace(/\|/g, "\t");
   if (GiveawayTitleInfo != "")

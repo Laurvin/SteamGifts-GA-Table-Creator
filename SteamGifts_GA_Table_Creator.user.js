@@ -3,7 +3,7 @@
 // @namespace SteamGifts GA Table Creator
 // @author Laurvin
 // @description Creates a table of all giveaways you've created with links to the Steam product page and the GA page. RaChart compatible.
-// @version 1.2
+// @version 1.3
 // @icon http://i.imgur.com/XYzKXzK.png
 // @downloadURL https://github.com/Laurvin/SteamGifts-GA-Table-Creator/raw/master/SteamGifts_GA_Table_Creator.user.js
 // @include http://www.steamgifts.com/giveaways/created*
@@ -115,7 +115,7 @@ function TraverseGAs()
   SGTable.val(SGTable.val() + Headers + '\n');
   SGTable.val(SGTable.val() + Aligners + '\n');
   var ExcelTable = $('#Table1');
-  ExcelTable.val(ExcelTable.val() + Headers.replace(/\|/g, "\t") + '\n');
+  ExcelTable.val(ExcelTable.val() + 'Game\t' + Headers.replace(/\|/g, "\t") + '\n');
 
   $('.table__row-inner-wrap').each(function ()
   {
@@ -133,14 +133,14 @@ function TraverseGAs()
         var GAlink = $(this).find('a.table_image_thumbnail').attr('href');
         if (typeof GAlink === 'undefined') // Certain packs, etc. have no background image so we search on Steam for the store url.
         {
-          var GAlink = $(this).find('a.table_image_thumbnail_missing').attr('href');
+          GAlink = $(this).find('a.table_image_thumbnail_missing').attr('href');
           var NoSteamLink = 1;
         }
         var GALinkMinusName = GAlink.substring(0, GAlink.lastIndexOf('/')); // Removes game name from link.
         var GAJustSlug = GALinkMinusName.substring(GALinkMinusName.lastIndexOf('/') + 1); // Saves just the slug.
         var GameName = $(this).find('a.table__column__heading').html();
-        var IsThereASpan = GameName.indexOf('<span>'); // Removing extra info added by ESGST.
-        if (IsThereASpan > 0) GameName = GameName.substr(0,IsThereASpan-1).trim();
+        var IsThereESGST = GameName.indexOf('<a class="esgst'); // Removing extra info added by ESGST.
+        if (IsThereESGST > 0) GameName = GameName.substr(0,IsThereESGST-1).trim();
         if (NoSteamLink == 1)
         {
           GetSteamInfo(GameName, GAJustSlug, EndDate);
